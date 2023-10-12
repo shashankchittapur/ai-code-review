@@ -1,18 +1,19 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: "AI PR Review Comment Action"
+description: "Adds review comments to the PR based on Open API model"
+author: "Shashank Chittapur"
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  GITHUB_TOKEN:
+    description: "Github token"
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  OPEN_API_TOKEN:
+    description: "Open API token"
+    required: true
+  OPEN_API_MODEL:
+    description: "Open API model"
+    required: true
+    default: "gpt-3.5-turbo"
 
 runs:
   using: node20
