@@ -30,7 +30,10 @@ const inputs: Inputs = {
 }
 
 const octokit = github.getOctokit(inputs.token)
-const configuration = new Configuration({ apiKey: inputs.open_api_token })
+const configuration = new Configuration({
+  apiKey: inputs.open_api_token,
+  organization: 'org-zbPJye4lMDb8X1x6YwUKp3Xa'
+})
 const openai = new OpenAIApi(configuration)
 
 /**

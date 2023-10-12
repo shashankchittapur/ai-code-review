@@ -17882,7 +17882,10 @@ const inputs = {
     model_name: core.getInput('OPEN_API_MODEL')
 };
 const octokit = github.getOctokit(inputs.token);
-const configuration = new openai_1.Configuration({ apiKey: inputs.open_api_token });
+const configuration = new openai_1.Configuration({
+    apiKey: inputs.open_api_token,
+    organization: 'org-zbPJye4lMDb8X1x6YwUKp3Xa'
+});
 const openai = new openai_1.OpenAIApi(configuration);
 /**
  * Gets the pull request details from the context.
