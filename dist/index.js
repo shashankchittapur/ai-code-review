@@ -17937,7 +17937,7 @@ async function run() {
     try {
         // Get the inputs from the workflow file:
         const prDetails = await getPRDetails();
-        core.info(`PR Details: ${JSON.stringify(prDetails)}`);
+        core.debug(`PR Details: ${JSON.stringify(prDetails)}`);
         let diff = null;
         // Check if PR is Opened or Synced
         const prAction = github.context.payload.action;
@@ -17976,9 +17976,9 @@ async function run() {
         if (!diff) {
             core.warning('Could not get diff, exiting');
         }
-        core.info(`Diff: ${diff}`);
+        core.debug(`Diff: ${diff}`);
         const parsedDiff = (0, parse_diff_1.default)(diff);
-        core.info(`Parsed Diff: ${JSON.stringify(parsedDiff)}`);
+        core.debug(`Parsed Diff: ${JSON.stringify(parsedDiff)}`);
         const comments = await analyzeCode(parsedDiff, prDetails);
         core.info(`Comments: ${JSON.stringify(comments)}`);
         if (comments.length > 0) {
@@ -18003,6 +18003,7 @@ exports.run = run;
 //"@typescript-eslint/array-type": ["error", { "default": "generic" }]
 async function analyzeCode(parsedDiff, prDetails) {
     const comments = [];
+    core.info('Starting to analyze code');
     for (const file of parsedDiff) {
         if (file.to === '/dev/null')
             continue; // Ignore deleted files
@@ -18017,6 +18018,7 @@ async function analyzeCode(parsedDiff, prDetails) {
             }
         }
     }
+    core.info('Finished analyzing code');
     return comments;
 }
 /**

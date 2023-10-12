@@ -94,7 +94,7 @@ export async function run(): Promise<void> {
     // Get the inputs from the workflow file:
 
     const prDetails = await getPRDetails()
-    core.info(`PR Details: ${JSON.stringify(prDetails)}`)
+    core.debug(`PR Details: ${JSON.stringify(prDetails)}`)
     let diff: any = null
     // Check if PR is Opened or Synced
     const prAction = github.context.payload.action
@@ -137,10 +137,10 @@ export async function run(): Promise<void> {
     if (!diff) {
       core.warning('Could not get diff, exiting')
     }
-    core.info(`Diff: ${diff}`)
+    core.debug(`Diff: ${diff}`)
 
     const parsedDiff = parseDiff(diff)
-    core.info(`Parsed Diff: ${JSON.stringify(parsedDiff)}`)
+    core.debug(`Parsed Diff: ${JSON.stringify(parsedDiff)}`)
 
     const comments: AIComment[] = await analyzeCode(parsedDiff, prDetails)
 
@@ -173,7 +173,7 @@ async function analyzeCode(
   prDetails: PRDetails
 ): Promise<AIComment[]> {
   const comments: AIComment[] = []
-
+  core.info('Starting to analyze code')
   for (const file of parsedDiff) {
     if (file.to === '/dev/null') continue // Ignore deleted files
     for (const chunk of file.chunks) {
@@ -187,6 +187,7 @@ async function analyzeCode(
       }
     }
   }
+  core.info('Finished analyzing code')
   return comments
 }
 
