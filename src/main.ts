@@ -44,7 +44,8 @@ const openai = new OpenAIApi(configuration)
 
 async function getPRDetails(): Promise<PRDetails> {
   const context = github.context
-  const pr = context.payload.pull_request
+  core.debug(`Context: ${JSON.stringify(context)}`)
+  const pr = context.payload.issue
 
   if (!pr) {
     throw new Error('Could not get pull request details from context, exiting')
@@ -98,14 +99,14 @@ export async function run(): Promise<void> {
     let diff: any = null
     // Check if PR is Opened or Synced
     const prAction = github.context.payload.action
-    if (prAction === 'opened') {
+    if (prAction === 'created') {
       core.info('PR Opened')
       diff = await getDiff(
         prDetails.owner,
         prDetails.repo,
         prDetails.pull_number
       )
-    } else if (prAction === 'synchronize') {
+    } else if (prAction === 'synced') {
       const newBaseSha = github.context.payload.after
       const oldBaseSha = github.context.payload.before
 
@@ -116,23 +117,22 @@ export async function run(): Promise<void> {
       // compare the two base SHAs to get the diff
       try {
         const response = await octokit.rest.repos.compareCommits({
+          headers: {
+            accept: 'application/vnd.github.v3.diff'
+          },
           owner: prDetails.owner,
           repo: prDetails.repo,
           base: oldBaseSha,
           head: newBaseSha
         })
-        const files = response.data.files
-        if (files) {
-          diff = files
-            .map((file: any) => {
-              return file.patch
-            })
-            .join('\n')
-        }
+        diff = String(response.data)
       } catch (error) {
         core.error(`Error getting diff: ${error}`)
         diff = null
       }
+    } else {
+      console.log('Unsupported event:', process.env.GITHUB_EVENT_NAME)
+      return
     }
     if (!diff) {
       core.warning('Could not get diff, exiting')
@@ -145,12 +145,13 @@ export async function run(): Promise<void> {
     const comments: AIComment[] = await analyzeCode(parsedDiff, prDetails)
 
     core.info(`Comments: ${JSON.stringify(comments)}`)
+    const firstTwoComments = comments.slice(0, 2)
     if (comments.length > 0) {
       await createReviewComment(
         prDetails.owner,
         prDetails.repo,
         prDetails.pull_number,
-        comments
+        firstTwoComments
       )
     }
   } catch (error) {
@@ -238,6 +239,7 @@ function createComment(
 ): AIComment[] {
   return aiResponses.flatMap(aiResponse => {
     const path = file.to || file.from // Use from if to is undefined
+    if (!path) return []
     return [
       {
         body: aiResponse.reviewComment,
