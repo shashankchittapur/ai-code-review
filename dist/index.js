@@ -17915,17 +17915,14 @@ async function getPRDetails() {
  */
 async function getDiff(owner, repo, pull_number) {
     try {
-        const response = await octokit.rest.pulls.listFiles({
+        const response = await octokit.rest.pulls.get({
             owner,
             repo,
-            pull_number
+            pull_number,
+            mediaType: { format: 'diff' }
         });
-        const files = response.data;
-        return files
-            .map((file) => {
-            return file.patch;
-        })
-            .join('\n');
+        // @ts-expect-error - response.data is a string
+        return response.data;
     }
     catch (error) {
         core.error(`Error getting diff: ${error}`);
@@ -18059,15 +18056,13 @@ async function getAIResponse(prompt) {
 }
 function createComment(file, chunk, aiResponses) {
     return aiResponses.flatMap(aiResponse => {
-        if (!file.to) {
-            return [];
-        }
+        const path = file.to || file.from; // Use from if to is undefined
         return [
             {
                 body: aiResponse.reviewComment,
-                path: file.to,
+                path,
                 line: Number(aiResponse.lineNumber)
-            }
+            } // Cast to AIComment to fix type error
         ];
     });
 }
